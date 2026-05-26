@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bi šla na zmenek? 💖</title>
+    <!-- Tailwind CSS za čudovito in odzivno obliko -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Nunito:wght@400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            -webkit-tap-highlight-color: transparent; /* Odstrani modro označevanje ob dotiku na telefonih */
+        }
+        
+        .handwritten {
+            font-family: 'Caveat', cursive;
+        }
+
+        /* Srčni utrip animacija */
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            14% { transform: scale(1.1); }
+            28% { transform: scale(1); }
+            42% { transform: scale(1.15); }
+            70% { transform: scale(1); }
+        }
+        .heartbeat {
+            animation: heartbeat 1.5s infinite;
+        }
+
+        /* Lebdeči srčki za uspeh */
+        @keyframes floatUp {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-10vh) scale(1.5);
+                opacity: 0;
+            }
+        }
+        .floating-heart {
+            position: fixed;
+            bottom: 0;
+            color: #ff4d6d;
+            font-size: 1.5rem;
+            pointer-events: none;
+            animation: floatUp 4s linear infinite;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-tr from-pink-100 via-red-50 to-pink-200 min-h-screen flex items-center justify-center p-4 overflow-hidden relative selection:bg-pink-200">
+
+    <!-- Ozadje z lebdečimi srčki (generirano preko JS na koncu) -->
+    <div id="heart-container" class="absolute inset-0 pointer-events-none z-0"></div>
+
+    <!-- Glavna kartica (Prilagojena širina in odzivnost za PC/mobi) -->
+    <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-6 md:p-8 w-full max-w-lg text-center border border-pink-100 relative z-10 transition-all duration-500 ease-in-out">
+        
+        <!-- KORAK 1: VPRAŠANJE -->
+        <div id="step-1" class="space-y-6">
+            <div class="flex justify-center">
+                <span class="text-6xl md:text-7xl heartbeat">💖</span>
+            </div>
+            
+            <h1 class="text-3xl md:text-4xl font-black text-gray-800 tracking-tight">
+                Hej, ljubezen... 🥰
+            </h1>
+            
+            <p class="text-lg md:text-xl text-gray-600 font-medium px-2">
+                Imam eno zelo pomembno vprašanje zate.
+            </p>
+            
+            <div class="py-2">
+                <p class="text-3xl md:text-4xl font-bold text-pink-600 handwritten">
+                    Bi šla z mano na zmenek?
+                </p>
+            </div>
+
+            <!-- Polje za gumba z varnim prostorom za premikanje "Ne" gumba -->
+            <div id="button-area" class="relative min-h-[140px] w-full bg-pink-50/50 rounded-2xl border border-dashed border-pink-100 flex items-center justify-center gap-6 overflow-hidden">
+                <button id="btnDa" onclick="nextStep(2)" class="px-8 py-3.5 bg-pink-500 hover:bg-pink-600 text-white font-extrabold rounded-full shadow-lg hover:shadow-pink-300/50 transition-all transform active:scale-95 text-lg md:text-xl z-20">
+                    Da! 🌹
+                </button>
+                
+                <button id="btnNe" class="px-8 py-3.5 bg-gray-400 text-white font-bold rounded-full shadow-md text-lg md:text-xl z-20 transition-all duration-150 ease-out absolute select-none touch-none" style="left: 60%; transform: translateX(-50%);">
+                    Ne 😢
+                </button>
+            </div>
+        </div>
+
+        <!-- KORAK 2: KOLEDAR -->
+        <div id="step-2" class="hidden space-y-6">
+            <div class="flex justify-center">
+                <span class="text-6xl">📅</span>
+            </div>
+            
+            <h2 class="text-2xl md:text-3xl font-black text-gray-800">
+                Jeeej! Vedel sem! 😍
+            </h2>
+            
+            <p class="text-lg text-gray-600">
+                Zdaj pa mi prosim povej, kdaj imaš čas?
+            </p>
+            
+            <div class="py-2 max-w-sm mx-auto">
+                <label for="date-picker" class="block text-sm font-semibold text-gray-500 mb-2">Izberi datum najinega zmenka:</label>
+                <input type="date" id="date-picker" onchange="checkDate()" class="w-full px-4 py-3 border-2 border-pink-200 rounded-xl focus:outline-none focus:border-pink-500 text-gray-700 font-semibold bg-white cursor-pointer shadow-inner text-center text-lg">
+            </div>
+
+            <button id="btnNextStep3" onclick="nextStep(3)" disabled class="w-full py-3.5 bg-gray-300 text-gray-500 font-bold rounded-xl shadow-md transition-all text-lg cursor-not-allowed max-w-sm mx-auto block">
+                Nadaljuj ➡️
+            </button>
+        </div>
+
+        <!-- KORAK 3: IZBIRA MOŽNOSTI -->
+        <div id="step-3" class="hidden space-y-6">
+            <h2 class="text-2xl md:text-3xl font-black text-gray-800">
+                Kaj bova počela? ✨
+            </h2>
+            
+            <p class="text-md md:text-lg text-gray-600">
+                Izberi svojo najljubšo možnost za najin zmenek:
+            </p>
+
+            <!-- Grid z 6 možnostmi (2 stolpca na telefonu, 3 na računalniku za boljšo preglednost) -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 py-2">
+                <!-- Možnost 1: Sushi -->
+                <button onclick="selectActivity('Sushi date 🍣')" class="activity-card p-4 border-2 border-pink-100 rounded-2xl hover:border-pink-400 hover:bg-pink-50 hover:scale-[1.03] active:scale-95 transition-all flex flex-col items-center justify-center gap-2 bg-white shadow-sm">
+                    <span class="text-4xl">🍣</span>
+                    <span class="text-sm font-bold text-gray-700">Sushi date</span>
+                </button>
+
+                <!-- Možnost 2: Pizza -->
+                <button onclick="selectActivity('Pizza date 🍕')" class="activity-card p-4 border-2 border-pink-100 rounded-2xl hover:border-pink-400 hover:bg-pink-50 hover:scale-[1.03] active:scale-95 transition-all flex flex-col items-center justify-center gap-2 bg-white shadow-sm">
+                    <span class="text-4xl">🍕</span>
+                    <span class="text-sm font-bold text-gray-700">Pizza date</span>
+                </button>
+
+                <!-- Možnost 3: Bowling -->
+                <button onclick="selectActivity('Bowling 🎳')" class="activity-card p-4 border-2 border-pink-100 rounded-2xl hover:border-pink-400 hover:bg-pink-50 hover:scale-[1.03] active:scale-95 transition-all flex flex-col items-center justify-center gap-2 bg-white shadow-sm">
+                    <span class="text-4xl">🎳</span>
+                    <span class="text-sm font-bold text-gray-700">Bowling</span>
+                </button>
+
+                <!-- Možnost 4: Go Kart -->
+                <button onclick="selectActivity('Go kart 🏎️')" class="activity-card p-4 border-2 border-pink-100 rounded-2xl hover:border-pink-400 hover:bg-pink-50 hover:scale-[1.03] active:scale-95 transition-all flex flex-col items-center justify-center gap-2 bg-white shadow-sm">
+                    <span class="text-4xl">🏎️</span>
+                    <span class="text-sm font-bold text-gray-700">Go kart</span>
+                </button>
+
+                <!-- Možnost 5: Pohod -->
+                <button onclick="selectActivity('Pohod med gorami 🏔️')" class="activity-card p-4 border-2 border-pink-100 rounded-2xl hover:border-pink-400 hover:bg-pink-50 hover:scale-[1.03] active:scale-95 transition-all flex flex-col items-center justify-center gap-2 bg-white shadow-sm">
+                    <span class="text-4xl">🏔️</span>
+                    <span class="text-sm font-bold text-gray-700">Pohod v gore</span>
+                </button>
+
+                <!-- Možnost 6: Morje -->
+                <button onclick="selectActivity('Izlet na morje 🌊')" class="activity-card p-4 border-2 border-pink-100 rounded-2xl hover:border-pink-400 hover:bg-pink-50 hover:scale-[1.03] active:scale-95 transition-all flex flex-col items-center justify-center gap-2 bg-white shadow-sm">
+                    <span class="text-4xl">🌊</span>
+                    <span class="text-sm font-bold text-gray-700">Morje</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- KORAK 4: POTRDITEV IN VRAČANJE PODATKOV -->
+        <div id="step-4" class="hidden space-y-6">
+            <div class="flex justify-center">
+                <span class="text-6xl md:text-7xl heartbeat">❤️</span>
+            </div>
+            
+            <h2 class="text-3xl md:text-4xl font-black text-pink-600 handwritten">
+                Vse je dogovorjeno! 🎉
+            </h2>
+            
+            <p class="text-lg text-gray-700 leading-relaxed px-2">
+                Najin popoln zmenek je potrjen! Zdaj mi prosim pošlji svoje izbire, da si zabeležim datum:
+            </p>
+
+            <!-- Povzetek zmenka -->
+            <div class="bg-gradient-to-r from-pink-50 to-red-50 rounded-2xl p-5 border border-pink-100 space-y-2 max-w-sm mx-auto">
+                <p class="text-xs text-gray-400 uppercase tracking-wider font-bold">Izbrani detajli:</p>
+                <p class="text-2xl font-black text-gray-800" id="summary-activity"></p>
+                <p class="text-lg font-bold text-pink-500" id="summary-date"></p>
+            </div>
+
+            <!-- Akcijski gumbi za vračanje podatkov -->
+            <div class="space-y-3 pt-2 max-w-sm mx-auto">
+                <!-- Gumb za WhatsApp -->
+                <a id="btnWhatsApp" target="_blank" class="w-full py-4 bg-[#25D366] hover:bg-[#20ba56] text-white font-extrabold rounded-2xl shadow-lg hover:shadow-green-200 transition-all flex items-center justify-center gap-2 text-lg cursor-pointer transform active:scale-95">
+                    <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.965C16.588 1.977 14.113.953 11.5.953c-5.44 0-9.866 4.372-9.87 9.802 0 1.63.463 3.224 1.34 4.625l-1.005 3.67 3.771-.992zm11.722-6.82c-.328-.164-1.94-.959-2.242-1.07-.302-.11-.522-.164-.742.164-.22.329-.85 1.07-1.04 1.29-.19.22-.38.247-.708.083-.328-.164-1.385-.511-2.637-1.628-.974-.87-1.63-1.947-1.821-2.275-.19-.328-.02-.505.144-.669.148-.148.329-.383.493-.575.165-.192.22-.329.33-.548.11-.22.055-.411-.028-.575-.082-.164-.742-1.787-1.016-2.447-.267-.643-.539-.556-.742-.566-.19-.01-.411-.011-.63-.011-.22 0-.577.082-.879.411-.302.329-1.154 1.123-1.154 2.74c0 1.616 1.18 3.178 1.346 3.402.164.224 2.322 3.546 5.625 4.973.785.34 1.398.543 1.876.693.79.25 1.507.215 2.074.13.633-.095 1.94-.794 2.215-1.562.275-.767.275-1.424.192-1.562-.082-.138-.302-.22-.63-.384z"/>
+                    </svg>
+                    Pošlji preko WhatsAppa
+                </a>
+
+                <!-- Alternativa: Kopiranje v odložišče -->
+                <button onclick="copyToClipboard()" class="w-full py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-2xl border border-gray-300 transition-all flex items-center justify-center gap-2 text-md transform active:scale-95">
+                    📋 Kopiraj sporočilo
+                </button>
+
+                <!-- Statusno sporočilo za kopiranje -->
+                <p id="copy-status" class="text-sm font-semibold text-green-600 hidden">Sporočilo je uspešno kopirano! ✔️</p>
+            </div>
+
+            <p class="text-xs text-gray-400 italic pt-4">
+                Pripravi se na lep dan, komaj čakam najino druženje! 😘
+            </p>
+        </div>
+
+    </div>
+
+    <script>
+        // Nastavitev minimalnega datuma v koledarju na današnji dan
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date-picker').setAttribute('min', today);
+
+        // Shranjevanje podatkov o izbiri
+        let selectedDate = '';
+        let selectedActivityName = '';
+
+        // Logika za izmikanje gumba "Ne" (izboljšano za mobilne naprave in PC)
+        const btnNe = document.getElementById('btnNe');
+        const buttonArea = document.getElementById('button-area');
+
+        function moveButton(e) {
+            if (e) {
+                e.preventDefault(); // Prepreči privzet klik ali scroll na mobilnih napravah
+            }
+            
+            // Pridobimo dimenzije območja za gumbe
+            const areaWidth = buttonArea.clientWidth;
+            const areaHeight = buttonArea.clientHeight;
+            const btnWidth = btnNe.clientWidth;
+            const btnHeight = btnNe.clientHeight;
+
+            // Izračunamo naključne koordinate znotraj območja z nekaj varnostnega odmika (padding)
+            const padding = 12;
+            const maxX = areaWidth - btnWidth - padding;
+            const maxY = areaHeight - btnHeight - padding;
+
+            // Ustvarimo naključno pozicijo (zagotovimo, da gumb ostane znotraj vidnega okvirja)
+            const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+            const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
+
+            // Posodobimo stil gumba
+            btnNe.style.position = 'absolute';
+            btnNe.style.left = randomX + 'px';
+            btnNe.style.top = randomY + 'px';
+            btnNe.style.transform = 'none'; // Odstranimo začetni transform centriranja
+        }
+
+        // Zaznavanje bližine oz. premika miške (PC)
+        btnNe.addEventListener('mouseover', moveButton);
+        btnNe.addEventListener('mouseenter', moveButton);
+        
+        // Zaznavanje na mobilnih telefonih (ob dotiku se takoj izmakne brez proženja klika)
+        btnNe.addEventListener('touchstart', moveButton, { passive: false });
+        btnNe.addEventListener('touchmove', moveButton, { passive: false });
+
+        // Preklop med koraki
+        function nextStep(step) {
+            document.getElementById('step-1').classList.add('hidden');
+            document.getElementById('step-2').classList.add('hidden');
+            document.getElementById('step-3').classList.add('hidden');
+            document.getElementById('step-4').classList.add('hidden');
+
+            document.getElementById(`step-${step}`).classList.remove('hidden');
+        }
+
+        // Preverjanje če je izbran datum za odklep gumba "Nadaljuj"
+        function checkDate() {
+            const dateInput = document.getElementById('date-picker').value;
+            const btnNext = document.getElementById('btnNextStep3');
+            
+            if (dateInput) {
+                selectedDate = dateInput;
+                btnNext.disabled = false;
+                btnNext.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                btnNext.classList.add('bg-pink-500', 'hover:bg-pink-600', 'text-white', 'active:scale-95', 'cursor-pointer');
+            } else {
+                btnNext.disabled = true;
+                btnNext.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                btnNext.classList.remove('bg-pink-500', 'hover:bg-pink-600', 'text-white', 'active:scale-95', 'cursor-pointer');
+            }
+        }
+
+        // Priprava sporočila za prenos/pošiljanje
+        function getFormattedMessage() {
+            const d = new Date(selectedDate);
+            const formattedDate = `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
+            return `Hej! Sprejemam tvoje povabilo na zmenek! ❤️\n\n📅 Datum: ${formattedDate}\n✨ Aktivnost: ${selectedActivityName}\n\nKomaj čakam! 🥰`;
+        }
+
+        // Izbira aktivnosti in končni korak
+        function selectActivity(activity) {
+            selectedActivityName = activity;
+            
+            // Formatiranje datuma v lepši slovenski zapis (npr. 26. 5. 2026)
+            const d = new Date(selectedDate);
+            const formattedDate = `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
+
+            // Nastavitev besedil v zaključnem koraku
+            document.getElementById('summary-activity').innerText = selectedActivityName;
+            document.getElementById('summary-date').innerText = `Datum: ${formattedDate}`;
+
+            // Dinamična posodobitev WhatsApp povezave
+            const message = encodeURIComponent(getFormattedMessage());
+            document.getElementById('btnWhatsApp').href = `https://api.whatsapp.com/send?text=${message}`;
+
+            // Prehod na zadnji korak
+            nextStep(4);
+            
+            // Aktivacija efekta lebdečih srčkov
+            startHeartRain();
+        }
+
+        // Funkcija za kopiranje v odložišče
+        function copyToClipboard() {
+            const textToCopy = getFormattedMessage();
+            
+            // Uporaba stabilne metode za iFrame okolje (kot zahtevano)
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = textToCopy;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            
+            try {
+                document.execCommand('copy');
+                const status = document.getElementById('copy-status');
+                status.classList.remove('hidden');
+                setTimeout(() => {
+                    status.classList.add('hidden');
+                }, 3000);
+            } catch (err) {
+                console.error('Napaka pri kopiranju:', err);
+            }
+            
+            document.body.removeChild(tempTextArea);
+        }
+
+        // Ustvarjanje lebdečih srčkov na končnem zaslonu
+        function startHeartRain() {
+            const container = document.getElementById('heart-container');
+            const hearts = ['❤️', '💖', '💝', '💕', '🌸', '✨'];
+            
+            setInterval(() => {
+                const heart = document.createElement('div');
+                heart.className = 'floating-heart';
+                heart.innerText = hearts[Math.floor(Math.random() * hearts.length)];
+                
+                // Naključna x-pozicija na zaslonu
+                heart.style.left = Math.random() * 100 + 'vw';
+                // Naključna hitrost animacije
+                const duration = 3 + Math.random() * 3;
+                heart.style.animationDuration = duration + 's';
+                // Naključna velikost
+                heart.style.fontSize = (1 + Math.random() * 1.5) + 'rem';
+                
+                container.appendChild(heart);
+                
+                // Po zaključku animacije odstranimo srček, da ne obremenjujemo spomina
+                setTimeout(() => {
+                    heart.remove();
+                }, duration * 1000);
+            }, 300);
+        }
+    </script>
+</body>
+</html>
